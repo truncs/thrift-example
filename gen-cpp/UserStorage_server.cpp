@@ -5,6 +5,7 @@
 #include <thrift/protocol/TBinaryProtocol.h>
 #include <thrift/server/TSimpleServer.h>
 #include <thrift/server/TThreadPoolServer.h>
+#include <thrift/server/TNonblockingServer.h>
 #include <thrift/concurrency/ThreadManager.h>
 #include <thrift/concurrency/PosixThreadFactory.h>
 #include <thrift/transport/TServerSocket.h>
@@ -39,21 +40,36 @@ class UserStorageHandler : virtual public UserStorageIf {
 };
 
 int main(int argc, char **argv) {
-  int port = 9090;
+  
   shared_ptr<UserStorageHandler> handler(new UserStorageHandler());
   shared_ptr<TProcessor> processor(new UserStorageProcessor(handler));
-  shared_ptr<TServerTransport> serverTransport(new TServerSocket(port));
-  shared_ptr<TTransportFactory> transportFactory(new TBufferedTransportFactory());
   shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
   
-  shared_ptr<ThreadManager> threadManager =  ThreadManager::newSimpleThreadManager(4);
+  // using thread pool with maximum 15 threads to handle incoming requests
+  shared_ptr<ThreadManager> threadManager = ThreadManager::newSimpleThreadManager(15);
   shared_ptr<PosixThreadFactory> threadFactory = shared_ptr<PosixThreadFactory>(new PosixThreadFactory());
   threadManager->threadFactory(threadFactory);
   threadManager->start();
-  
-  TThreadPoolServer server(processor, serverTransport, transportFactory, protocolFactory, threadManager);
-//TSimpleServer server(processor, serverTransport, transportFactory, protocolFactory);
+  TNonblockingServer server(processor, protocolFactory, 8888, threadManager);
   server.serve();
+
+   
+    // The following demonstrates the use of thrift's ThreadPoolServe
+    //int port = 9090;
+    //   shared_ptr<UserStorageHandler> handler(new UserStorageHandler());
+    //   shared_ptr<TProcessor> processor(new UserStorageProcessor(handler));
+    //   //shared_ptr<TServerTransport> serverTransport(new TServerSocket(port));
+    //   shared_ptr<TTransportFactory> transportFactory(new TBufferedTransportFactory());
+    //   shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
+  
+    //   shared_ptr<ThreadManager> threadManager =  ThreadManager::newSimpleThreadManager(4);
+    //   shared_ptr<PosixThreadFactory> threadFactory = shared_ptr<PosixThreadFactory>(new PosixThreadFactory());
+    //   threadManager->threadFactory(threadFactory);
+    //   threadManager->start();
+    //    TNonblockingServer server(processor, protocolFactory, port, threadManager);
+    //   //TThreadPoolServer server(processor, serverTransport, transportFactory, protocolFactory, threadManager);
+    //   //TSimpleServer server(processor, serverTransport, transportFactory, protocolFactory);
+    //   server.serve();
   return 0;
 }
 
