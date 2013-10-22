@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
   shared_ptr<PosixThreadFactory> threadFactory = shared_ptr<PosixThreadFactory>(new PosixThreadFactory());
   threadManager->threadFactory(threadFactory);
   threadManager->start();
-  TNonblockingServer server(processor, protocolFactory, 8888, threadManager);
+  TNonblockingServer server(processor, protocolFactory, 9090, threadManager);
   server.serve();
 
    

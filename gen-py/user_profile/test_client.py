@@ -8,7 +8,7 @@ import UserStorage
 transport = TSocket.TSocket("localhost", 9090)
 
 # Buffering is critical. Raw sockets are very slow
-transport = TTransport.TBufferedTransport(transport)
+transport = TTransport.TFramedTransport(transport)
 
 # Connect
 transport.open()
